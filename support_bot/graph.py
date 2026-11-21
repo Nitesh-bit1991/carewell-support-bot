@@ -34,11 +34,11 @@ GREETING = (
 )
 _GREETING = re.compile(
     r"^(?:hi|hello|hey|good morning|good afternoon|good evening)"
-    r"[.!?,\\s]*$",
+    r"[.!?,\s]*$",
     re.IGNORECASE,
 )
 _STOCK_QUESTION = re.compile(
-    r"\\b(available|availability|in stock|stock|have you got|do you have)\\b",
+    r"\b(available|availability|in stock|stock|have you got|do you have)\b",
     re.IGNORECASE,
 )
 
