@@ -5,15 +5,21 @@ from .retrieval import Hit
 
 SYSTEM_PROMPT = (
     "You are a customer support assistant for CareWell Medical Store. "
-    "Answer ONLY from the provided context about store services. "
-    "Never give medical advice. Keep answers short and friendly. "
+    "Answer ONLY using relevant provided context about store services. "
+    "Never give medical advice, diagnosis, dosage, or product recommendations. "
+    "Do not infer stock availability for a named medicine or product. "
+    "If the context says live stock cannot be checked, explain that limitation and tell the customer to contact the store. "
+    "Ignore context passages that do not directly help answer the question. "
     "Mention the source file in square brackets, e.g. [delivery.md]. "
-    "If the context does not contain the answer, reply with exactly: NO_ANSWER"
+    "If the relevant context does not contain the answer, reply with exactly: NO_ANSWER"
 )
 
 
 def generate_answer(question: str, hits: list[Hit], use_llm: bool = True) -> str:
-    """Use Claude if ANTHROPIC_API_KEY is set, otherwise quote the best passage."""
+    """Use Claude when configured; otherwise return the best relevant passage."""
+    if not hits:
+        return "NO_ANSWER"
+
     if use_llm and os.environ.get("ANTHROPIC_API_KEY"):
         try:
             import anthropic
@@ -25,8 +31,9 @@ def generate_answer(question: str, hits: list[Hit], use_llm: bool = True) -> str
                 system=SYSTEM_PROMPT,
                 messages=[{"role": "user", "content": f"Context:\n{context}\n\nQuestion: {question}"}],
             )
-            return response.content[0].text.strip()
+            answer = response.content[0].text.strip()
+            return answer if answer else "NO_ANSWER"
         except ImportError:
-            pass  # anthropic not installed: fall back to extractive mode
+            pass
     top = hits[0].chunk
     return f"{top.text} [{top.source}]"
