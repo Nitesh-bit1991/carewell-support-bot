@@ -9,5 +9,11 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install langgraph pytest
-      - run: pytest -q
-      - run: python eval/run_eval.py
+      - name: Run unit tests
+        run: pytest -q
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+      - name: Run offline RAG evaluation
+        run: python eval/run_eval.py
+        env:
+          PYTHONPATH: ${{ github.workspace }}
