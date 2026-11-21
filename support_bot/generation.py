@@ -5,7 +5,7 @@ import re
 from .retrieval import Hit
 
 _STOCK_QUESTION = re.compile(
-    r"\\b(available|availability|in stock|stock|have you got|do you have)\\b",
+    r"\b(available|availability|in stock|stock|have you got|do you have)\b",
     re.IGNORECASE,
 )
 
@@ -41,7 +41,7 @@ def _fallback_answer(question: str, hits: list[Hit]) -> str:
                 "[products.md]"
             )
             if contact:
-                answer += f"\\n\\n{contact.text} [contact.md]"
+                answer += f"\n\n{contact.text} [contact.md]"
             return answer
 
     top = hits[0].chunk
@@ -57,12 +57,12 @@ def generate_answer(question: str, hits: list[Hit], use_llm: bool = True) -> str
         try:
             import anthropic
 
-            context = "\\n\\n".join(f"[{h.chunk.source}]\\n{h.chunk.text}" for h in hits)
+            context = "\n\n".join(f"[{h.chunk.source}]\n{h.chunk.text}" for h in hits)
             response = anthropic.Anthropic().messages.create(
                 model=os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-5-5"),
                 max_tokens=400,
                 system=SYSTEM_PROMPT,
-                messages=[{"role": "user", "content": f"Context:\\n{context}\\n\\nQuestion: {question}"}],
+                messages=[{"role": "user", "content": f"Context:\n{context}\n\nQuestion: {question}"}],
             )
             answer = response.content[0].text.strip()
             return answer if answer else "NO_ANSWER"
