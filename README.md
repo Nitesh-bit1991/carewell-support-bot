@@ -31,7 +31,7 @@ graph TD;
 ## Run it
 
 ```bash
-git clone https://github.com/<your-username>/carewell-support-bot && cd carewell-support-bot
+git clone https://github.com/Nitesh-bit1991/carewell-support-bot && cd carewell-support-bot
 pip install -r requirements.txt
 
 streamlit run app.py                        # chat UI
@@ -85,7 +85,7 @@ tests/                  unit tests
 
 ## Built with AI assistance
 
-I built this project with help from Claude (Anthropic) for scaffolding, code review and test ideas. I chose the use case, wrote the store documents and evaluation questions, and reviewed and tested the code.
+I built this project with help from Claude (Anthropic), which drafted much of the code, the store documents and the evaluation questions. I chose the use case and the design direction (LangGraph, cosine retrieval with a reranker, a medical-advice safety check) and ran the project myself.
 
 ## License
 
