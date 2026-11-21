@@ -8,6 +8,14 @@ def bot():
     return SupportBot(use_llm=False)
 
 
+def test_greeting_returns_a_welcome_without_retrieval(bot):
+    for question in ("hello", "Hi!", "good morning"):
+        reply = bot.ask(question)
+        assert reply.route == "greeting"
+        assert "Welcome to CareWell" in reply.text
+        assert not reply.sources
+
+
 def test_answers_from_the_right_document(bot):
     reply = bot.ask("Is home delivery free?")
     assert reply.route == "answered"
@@ -24,15 +32,14 @@ def test_opening_hours_returns_the_actual_hours(bot):
         assert "Speaking to the pharmacist" not in reply.text
 
 
-def test_named_product_availability_uses_products_document(bot):
+def test_named_product_availability_explains_live_stock_limitation(bot):
     reply = bot.ask("Do you have paracetamol available?")
     assert reply.route == "answered"
-    # The products document explains that live stock is not shown online.
-    # The contact document is also relevant because it tells customers how
-    # to reach the store/pharmacist for medicine availability questions.
     assert "products.md" in reply.sources
     assert "contact.md" in reply.sources
-    assert "live stock levels" in reply.text.lower() or "available" in reply.text.lower()
+    assert "cannot confirm" in reply.text.lower()
+    assert "live stock levels" in reply.text.lower()
+    assert "+49 681 000111" in reply.text
     assert "Refrigerated products" not in reply.text
 
 
