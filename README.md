@@ -1,6 +1,6 @@
 # CareWell Support Bot
 
-[![Python tests](https://github.com/Nitesh-bit1991/carewell-support-bot/actions/workflows/python-tests.yml/badge.svg)](https://github.com/Nitesh-bit1991/carewell-support-bot/actions/workflows/python-tests.yml)
+[![Python tests](https://github.com/Nitesh-bit1991/carewell-support-bot/actions/workflows/ci.yml/badge.svg)](https://github.com/Nitesh-bit1991/carewell-support-bot/actions/workflows/ci.yml)
 
 A small customer-support chatbot for a **fictional medical store**, built as a RAG pipeline with **LangGraph**. It answers questions about opening hours, delivery, prescriptions, payment and returns **only from the store's own documents**, refuses to give medical advice, and hands the customer to a human when it is unsure.
 
@@ -79,7 +79,7 @@ The evaluation uses 23 questions: 15 answerable store questions, 3 out-of-scope 
 - **Failure 2:** "Do you offer car rental?" is answered with the payment section because "offer" matches "we do not offer purchases on credit". Scores for this false match overlap with scores for correct answers, so a single threshold does not fix it.
 - Both failures come from matching words rather than meaning. The next experiment is embedding-based retrieval plus a cross-encoder reranker, evaluated on a larger question set.
 
-A GitHub Actions workflow runs the unit tests and offline evaluation on pushes and pull requests to `main`.
+The existing GitHub Actions CI workflow runs the unit tests and offline evaluation on pushes and pull requests.
 
 ## Limitations
 
