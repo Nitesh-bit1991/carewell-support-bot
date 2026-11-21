@@ -14,7 +14,7 @@ from langgraph.graph import END, START, StateGraph
 
 from .generation import generate_answer
 from .knowledge import DOCS_DIR, load_chunks
-from .retrieval import CosineRetriever, Hit, make_reranker
+from .retrieval import CosineRetriever, Hit, has_lexical_overlap, make_reranker
 from .safety import asks_for_medical_advice
 
 REFUSAL = (
@@ -30,10 +30,10 @@ HANDOFF = (
 
 class BotState(TypedDict, total=False):
     question: str
-    candidates: list[Hit]   # after cosine retrieval
-    ranked: list[Hit]       # after reranking
+    candidates: list[Hit]
+    ranked: list[Hit]
     answer: str
-    route: str              # "answered" | "handoff" | "medical_refusal"
+    route: str
 
 
 @dataclass
@@ -66,7 +66,6 @@ class SupportBot:
         self.use_llm = use_llm
         self.graph = self._build_graph()
 
-    # --- nodes -----------------------------------------------------------
     def _safety(self, state: BotState) -> BotState:
         return {}
 
@@ -77,25 +76,30 @@ class SupportBot:
         return {"candidates": self.retriever.search(state["question"], self.candidates_k)}
 
     def _rerank(self, state: BotState) -> BotState:
-        ranked = self.reranker.rerank(state["question"], state["candidates"])
+        # A passage must share at least one meaningful term with the question.
+        # This prevents a weak, unrelated cosine match from reaching the LLM.
+        relevant = [
+            hit for hit in state["candidates"]
+            if has_lexical_overlap(state["question"], hit.chunk)
+        ]
+        ranked = self.reranker.rerank(state["question"], relevant)
         return {"ranked": ranked[: self.final_k]}
 
     def _generate(self, state: BotState) -> BotState:
         text = generate_answer(state["question"], state["ranked"], self.use_llm)
-        if text == "NO_ANSWER":  # the LLM judged the context insufficient
+        if text == "NO_ANSWER":
             return {"answer": HANDOFF, "route": "handoff"}
         return {"answer": text, "route": "answered"}
 
     def _handoff(self, state: BotState) -> BotState:
         return {"answer": HANDOFF, "route": "handoff", "ranked": []}
 
-    # --- routing ---------------------------------------------------------
     def _after_safety(self, state: BotState) -> str:
         return "refuse" if asks_for_medical_advice(state["question"]) else "retrieve"
 
     def _after_rerank(self, state: BotState) -> str:
-        best_cosine = max((h.cosine for h in state["candidates"]), default=0.0)
-        return "generate" if best_cosine >= self.min_cosine else "handoff"
+        best_cosine = max((h.cosine for h in state.get("ranked", [])), default=0.0)
+        return "generate" if state.get("ranked") and best_cosine >= self.min_cosine else "handoff"
 
     def _build_graph(self):
         g = StateGraph(BotState)
@@ -114,7 +118,6 @@ class SupportBot:
             g.add_edge(node, END)
         return g.compile()
 
-    # --- public API ------------------------------------------------------
     def ask(self, question: str) -> Reply:
         state = self.graph.invoke({"question": question})
         ranked = state.get("ranked", [])
