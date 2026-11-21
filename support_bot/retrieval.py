@@ -30,6 +30,15 @@ def tokenize(text: str) -> list[str]:
     return [_stem(t) for t in _TOKEN.findall(text.lower()) if t not in _STOP]
 
 
+def has_lexical_overlap(query: str, chunk: Chunk) -> bool:
+    """Reject passages that share no meaningful terms with the user's question."""
+    query_terms = set(tokenize(query))
+    if not query_terms:
+        return False
+    passage_terms = set(tokenize(f"{chunk.heading} {chunk.text}"))
+    return bool(query_terms & passage_terms)
+
+
 @dataclass(frozen=True)
 class Hit:
     chunk: Chunk
@@ -83,8 +92,7 @@ def _bigrams(tokens: list[str]) -> set[tuple[str, str]]:
 class LexicalReranker:
     """Light reranker with no model download.
 
-    Blends the cosine score with how many query words appear in the chunk,
-    how many word pairs match (phrase evidence), and overlap with the heading.
+    Blends cosine score with query-term coverage, phrase evidence and heading overlap.
     """
 
     def rerank(self, query: str, hits: list[Hit]) -> list[Hit]:
@@ -102,11 +110,7 @@ class LexicalReranker:
 
 
 class CrossEncoderReranker:
-    """Neural reranker (optional): pip install sentence-transformers.
-
-    A cross-encoder reads the question and a passage together, which is usually
-    more accurate than comparing separate vectors. Downloads the model on first use.
-    """
+    """Neural reranker (optional): pip install sentence-transformers."""
 
     def __init__(self, model_name: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"):
         from sentence_transformers import CrossEncoder
