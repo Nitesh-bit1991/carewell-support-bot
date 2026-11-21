@@ -14,6 +14,16 @@ def test_answers_from_the_right_document(bot):
     assert reply.sources[0] == "delivery.md"
 
 
+def test_opening_hours_returns_the_actual_hours(bot):
+    for question in ("What are your opening hours?", "what is open hours ?"):
+        reply = bot.ask(question)
+        assert reply.route == "answered"
+        assert "contact.md" in reply.sources
+        assert "8:30" in reply.text
+        assert "21:00" in reply.text
+        assert "Speaking to the pharmacist" not in reply.text
+
+
 def test_named_product_availability_uses_products_document(bot):
     reply = bot.ask("Do you have paracetamol available?")
     assert reply.route == "answered"
