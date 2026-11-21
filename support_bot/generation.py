@@ -1,7 +1,13 @@
 """Write the final answer from the retrieved passages."""
 import os
+import re
 
 from .retrieval import Hit
+
+_STOCK_QUESTION = re.compile(
+    r"\\b(available|availability|in stock|stock|have you got|do you have)\\b",
+    re.IGNORECASE,
+)
 
 SYSTEM_PROMPT = (
     "You are a customer support assistant for CareWell Medical Store. "
@@ -15,8 +21,35 @@ SYSTEM_PROMPT = (
 )
 
 
+def _fallback_answer(question: str, hits: list[Hit]) -> str:
+    """Deterministic fallback that preserves stock and contact policies."""
+    if _STOCK_QUESTION.search(question):
+        stock = next(
+            (h.chunk for h in hits
+             if h.chunk.source == "products.md" and h.chunk.heading.lower() == "stock availability"),
+            None,
+        )
+        contact = next(
+            (h.chunk for h in hits
+             if h.chunk.source == "contact.md" and h.chunk.heading.lower() == "phone, whatsapp and email"),
+            None,
+        )
+        if stock:
+            answer = (
+                "We cannot show live stock levels online, so I cannot confirm whether "
+                "this item is currently available. Please call or message us to check. "
+                "[products.md]"
+            )
+            if contact:
+                answer += f"\\n\\n{contact.text} [contact.md]"
+            return answer
+
+    top = hits[0].chunk
+    return f"{top.text} [{top.source}]"
+
+
 def generate_answer(question: str, hits: list[Hit], use_llm: bool = True) -> str:
-    """Use Claude when configured; otherwise return the best relevant passage."""
+    """Use Claude when configured; otherwise return a safe deterministic answer."""
     if not hits:
         return "NO_ANSWER"
 
@@ -24,16 +57,15 @@ def generate_answer(question: str, hits: list[Hit], use_llm: bool = True) -> str
         try:
             import anthropic
 
-            context = "\n\n".join(f"[{h.chunk.source}]\n{h.chunk.text}" for h in hits)
+            context = "\\n\\n".join(f"[{h.chunk.source}]\\n{h.chunk.text}" for h in hits)
             response = anthropic.Anthropic().messages.create(
                 model=os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-5-5"),
                 max_tokens=400,
                 system=SYSTEM_PROMPT,
-                messages=[{"role": "user", "content": f"Context:\n{context}\n\nQuestion: {question}"}],
+                messages=[{"role": "user", "content": f"Context:\\n{context}\\n\\nQuestion: {question}"}],
             )
             answer = response.content[0].text.strip()
             return answer if answer else "NO_ANSWER"
         except ImportError:
             pass
-    top = hits[0].chunk
-    return f"{top.text} [{top.source}]"
+    return _fallback_answer(question, hits)
