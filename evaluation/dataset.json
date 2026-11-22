@@ -1,0 +1,63 @@
+
+[
+  {
+    "question": "What are your opening hours?",
+    "expected_sources": ["contact.md"]
+  },
+  {
+    "question": "How can I contact the store?",
+    "expected_sources": ["contact.md"]
+  },
+  {
+    "question": "Is home delivery free?",
+    "expected_sources": ["delivery.md"]
+  },
+  {
+    "question": "How much does delivery cost for nearby addresses?",
+    "expected_sources": ["delivery.md"]
+  },
+  {
+    "question": "Can you deliver refrigerated products the next day?",
+    "expected_sources": ["delivery.md"]
+  },
+  {
+    "question": "How can I order a medicine?",
+    "expected_sources": ["ordering_and_prescriptions.md"]
+  },
+  {
+    "question": "Do I need a prescription for prescription medicines?",
+    "expected_sources": ["ordering_and_prescriptions.md"]
+  },
+  {
+    "question": "Do you have paracetamol in stock?",
+    "expected_sources": ["products.md"]
+  },
+  {
+    "question": "Can I return a thermometer?",
+    "expected_sources": ["returns.md"]
+  },
+  {
+    "question": "How long do refunds take?",
+    "expected_sources": ["returns.md"]
+  },
+  {
+    "question": "I need my order brought to my home. What are the conditions?",
+    "expected_sources": ["delivery.md"]
+  },
+  {
+    "question": "I bought a device but changed my mind. Can I bring it back?",
+    "expected_sources": ["returns.md"]
+  },
+  {
+    "question": "I have a doctor's prescription. How do I get the medicine?",
+    "expected_sources": ["ordering_and_prescriptions.md"]
+  },
+  {
+    "question": "The item I received was damaged. What should I do?",
+    "expected_sources": ["returns.md"]
+  },
+  {
+    "question": "Can I get a product that is not currently available in the shop?",
+    "expected_sources": ["products.md"]
+  }
+]
