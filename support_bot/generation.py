@@ -37,7 +37,7 @@ def _fallback_answer(question: str, hits: list[Hit]) -> str:
         if stock:
             answer = (
                 "We cannot show live stock levels online, so I cannot confirm whether "
-                "this item is currently available. Please call or message us to check. "
+                "this item is currently available. Please call or message us at +49 681 000111 to check."
                 "[products.md]"
             )
             if contact:
